@@ -131,7 +131,7 @@ class SortableSudokuGrid extends Component {
     }
 
     componentWillReceiveProps (nextProps) {
-        let { sortable, dataSource, } = nextProps
+        let { sortable, dataSource, columnCount} = nextProps
         let { sortable: lastSortable,  dataSource: lastDataSource, } = this.props
         let newState
         if (sortable !== lastSortable) {
@@ -142,6 +142,19 @@ class SortableSudokuGrid extends Component {
             !newState && (newState = {})
             newState.dataSource = dataSource
         }
+        //////////////////////////////////////////////////////////////////////////////////////////
+        let newDataSourceLength = dataSource.length
+        let height = (Math.floor((newDataSourceLength - 1) / columnCount) + 1 ) * this._rowHeight
+        Animated.timing(
+            this.state.containerHeight,
+            {
+                toValue: height,
+                duration: containerHeight.animationDuration,
+            }
+        ).start(() => {
+            this._animationInstace = null
+        })
+        //////////////////////////////////////////////////////////////////////////////////////////
         newState && this.setState(newState)
     }
 
@@ -247,6 +260,10 @@ class SortableSudokuGrid extends Component {
     }
 
     _onTouchMove = (e, gestureState) => {
+        if (gestureState.numberActiveTouches > 1) {
+            //限制多个同时移动（多个同时移动会导致混乱）
+            return
+        }
         //console.log(`_onTouchMove this._touchDown = ${this._touchDown}`)
         //compare this._touchDown to fix unexcepted _onTouchMove trigger in specified cases
         if (!this._touchDown || !this.state.sortable || !this._currentStartCell || !this._currentDraggingComponent) {
